@@ -1,58 +1,19 @@
-import { useEffect, useState } from "react";
+// screens/LoginScreen.tsx
+import { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
+  ActivityIndicator,
   Button,
   StyleSheet,
-  ActivityIndicator,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { useLogin } from "../hooks/useLogin";
-import * as Google from "expo-auth-session/providers/google";
-import * as Facebook from "expo-auth-session/providers/facebook";
-import * as WebBrowser from "expo-web-browser";
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { handleLogin, handleOAuthLogin, isLoading } = useLogin();
-
-  // ✅ Redirect URI hardcoded để tránh lỗi với Google
-  const redirectUri = "https://auth.expo.io/@sonkha202/myapp";
-  console.log("🔁 Redirect URI:", redirectUri);
-
-  const [googleRequest, googleResponse, promptGoogle] = Google.useAuthRequest({
-    clientId:
-      "399474687804-c94ehap70kelq8ht5ribvlcncqmg5140.apps.googleusercontent.com",
-    redirectUri,
-    scopes: ["profile", "email"],
-  });
-
-  const [fbRequest, fbResponse, promptFacebook] = Facebook.useAuthRequest({
-    clientId: "YOUR_FACEBOOK_APP_ID", // ← Thay bằng ID thật
-    redirectUri,
-  });
-
-  useEffect(() => {
-    console.log("📦 Google Response:", JSON.stringify(googleResponse, null, 2));
-    if (googleResponse?.type === "success") {
-      const token = googleResponse.authentication?.accessToken;
-      if (token) {
-        handleOAuthLogin("google", token);
-      }
-    }
-  }, [googleResponse]);
-
-  useEffect(() => {
-    if (fbResponse?.type === "success") {
-      const token = fbResponse.authentication?.accessToken;
-      if (token) {
-        handleOAuthLogin("facebook", token);
-      }
-    }
-  }, [fbResponse]);
+  const { handleLogin, handleOAuthRedirectLogin, isLoading } = useLogin();
 
   return (
     <View style={styles.container}>
@@ -85,8 +46,8 @@ export default function LoginScreen() {
 
       <Button
         title="🔴 Google"
-        onPress={() => promptGoogle()}
-        disabled={!googleRequest || isLoading}
+        onPress={() => handleOAuthRedirectLogin("google")}
+        disabled={isLoading}
         color="#DB4437"
       />
 
@@ -94,14 +55,12 @@ export default function LoginScreen() {
 
       <Button
         title="🔵 Facebook"
-        onPress={() => promptFacebook()}
-        disabled={!fbRequest || isLoading}
+        onPress={() => handleOAuthRedirectLogin("facebook")}
+        disabled={isLoading}
         color="#3b5998"
       />
 
-      {isLoading && (
-        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      )}
+      {isLoading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
     </View>
   );
 }
